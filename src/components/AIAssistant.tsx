@@ -22,7 +22,7 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your AI shopping assistant. I can help you find the perfect products, compare features, and answer any questions you have about our futuristic marketplace. What are you looking for today?",
+      text: "Hi! I'm your AI shopping assistant. I can help you find the perfect products, compare features, and answer any questions you have about our futuristic marketplace. What are you looking for today?",
       isUser: false,
       timestamp: new Date()
     }
