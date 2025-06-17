@@ -33,6 +33,9 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
   const [speechSupported, setSpeechSupported] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
+  const supportsSpeech = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+  console.log("Soporte SpeechRecognition:", supportsSpeech);
+
   useEffect(() => {
     console.log('Inicializando Web Speech API...');
     
