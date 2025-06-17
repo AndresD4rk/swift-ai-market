@@ -35,8 +35,8 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
   useEffect(() => {
     // Inicializar Web Speech API
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
+      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognitionConstructor();
       
       recognitionInstance.lang = 'es-ES';
       recognitionInstance.continuous = false;
@@ -250,6 +250,24 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
       </div>
     </div>
   );
+};
+
+const getAIResponse = (userInput: string): string => {
+  const input = userInput.toLowerCase();
+  
+  if (input.includes('neural') || input.includes('interfaz') || input.includes('cerebro')) {
+    return "¡El Casco de Interfaz Neural es nuestro producto mejor calificado! Ofrece interacción digital perfecta con una calificación de 4.8 estrellas. Perfecto para productividad y juegos. ¿Te gustaría saber más sobre sus características?";
+  } else if (input.includes('quantum') || input.includes('cuántico') || input.includes('procesador')) {
+    return "¡Nuestra Unidad de Procesamiento Cuántico es revolucionaria! Proporciona computación ultra-rápida con aceleración cuántica. Genial para desarrollo de IA y cálculos complejos. Tiene un precio de $1,299.99. ¿Te interesan las especificaciones técnicas?";
+  } else if (input.includes('display') || input.includes('pantalla') || input.includes('holográfico')) {
+    return "¡La Pantalla Holográfica es increíble! Cuenta con ángulos de visión de 360 grados y visualización 3D impresionante. Perfecta para presentaciones y entretenimiento. ¿Te gustaría ver productos similares o aprender sobre la instalación?";
+  } else if (input.includes('barato') || input.includes('económico') || input.includes('presupuesto')) {
+    return "Para opciones económicas, recomiendo el Hub de Energía Inalámbrico a $199.99 o el Escáner Biométrico Inteligente a $349.99. Ambos ofrecen gran valor y excelentes reseñas. ¿Qué tipo de producto te interesa más?";
+  } else if (input.includes('recomienda') || input.includes('sugiere') || input.includes('qué me aconsejas')) {
+    return "Basándome en nuestros productos populares, recomendaría empezar con el Asistente de Voz IA ($449.99) para integración de hogar inteligente, o el Casco de Interfaz Neural ($899.99) para tecnología de vanguardia. ¿Cuál es tu caso de uso principal?";
+  } else {
+    return "¡Entiendo que estás interesado en nuestros productos! Nuestro marketplace cuenta con tecnología de vanguardia desde interfaces neurales hasta procesadores cuánticos. ¿Podrías contarme más sobre lo que buscas? ¡Puedo ayudarte a encontrar la opción perfecta!";
+  }
 };
 
 export default AIAssistant;
