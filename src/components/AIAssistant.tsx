@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Send, X, Bot, User } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, X, Bot, User, Mic, MicOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,20 +22,102 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hi! I'm your AI shopping assistant. I can help you find the perfect products, compare features, and answer any questions you have about our futuristic marketplace. What are you looking for today?",
+      text: "¡Hola! Soy tu asistente de compras con IA. Puedo ayudarte a encontrar productos perfectos, comparar características y responder cualquier pregunta sobre nuestro marketplace futurista. También puedes hablarme usando el botón de micrófono. ¿Qué estás buscando hoy?",
       isUser: false,
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim()) return;
+  useEffect(() => {
+    // Inicializar Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.lang = 'es-ES';
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.maxAlternatives = 1;
+
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setIsListening(false);
+        
+        // Enviar automáticamente el mensaje transcrito
+        setTimeout(() => {
+          handleSendMessage(null, transcript);
+        }, 100);
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Error de reconocimiento de voz:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+
+    // Inicializar síntesis de voz
+    if ('speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, []);
+
+  const startListening = () => {
+    if (recognition && !isListening) {
+      recognition.start();
+    }
+  };
+
+  const stopListening = () => {
+    if (recognition && isListening) {
+      recognition.stop();
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (synthRef.current) {
+      // Cancelar cualquier síntesis en curso
+      synthRef.current.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 0.8;
+      
+      synthRef.current.speak(utterance);
+    }
+  };
+
+  const handleSendMessage = (e: React.FormEvent | null, voiceText?: string) => {
+    if (e) e.preventDefault();
+    
+    const messageText = voiceText || inputMessage;
+    if (!messageText.trim()) return;
 
     const userMessage: Message = {
       id: messages.length + 1,
-      text: inputMessage,
+      text: messageText,
       isUser: true,
       timestamp: new Date()
     };
@@ -43,33 +125,38 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
 
-    // Simulate AI response
+    // Simular respuesta de IA
     setTimeout(() => {
       const aiResponse: Message = {
         id: messages.length + 2,
-        text: getAIResponse(inputMessage),
+        text: getAIResponse(messageText),
         isUser: false,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiResponse]);
+      
+      // Leer la respuesta en voz alta
+      setTimeout(() => {
+        speakText(aiResponse.text);
+      }, 500);
     }, 1000);
   };
 
   const getAIResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (input.includes('neural') || input.includes('brain')) {
-      return "The Neural Interface Headset is our top-rated brain-computer interface! It offers seamless digital interaction with a 4.8-star rating. Perfect for productivity and gaming. Would you like to know more about its features?";
-    } else if (input.includes('quantum') || input.includes('processor')) {
-      return "Our Quantum Processing Unit is revolutionary! It provides ultra-fast computing with quantum acceleration. Great for AI development and complex calculations. It's priced at $1,299.99. Interested in the technical specifications?";
-    } else if (input.includes('display') || input.includes('holographic')) {
-      return "The Holographic Display is amazing! It features 360-degree viewing angles and stunning 3D visualization. Perfect for presentations and entertainment. Would you like to see similar products or learn about installation?";
-    } else if (input.includes('cheap') || input.includes('budget')) {
-      return "For budget-friendly options, I recommend the Wireless Power Hub at $199.99 or the Smart Biometric Scanner at $349.99. Both offer great value and excellent reviews. Which type of product interests you most?";
-    } else if (input.includes('recommend') || input.includes('suggest')) {
-      return "Based on our trending products, I'd recommend starting with the AI Voice Assistant ($449.99) for smart home integration, or the Neural Interface Headset ($899.99) for cutting-edge tech. What's your primary use case?";
+    if (input.includes('neural') || input.includes('interfaz') || input.includes('cerebro')) {
+      return "¡El Casco de Interfaz Neural es nuestro producto mejor calificado! Ofrece interacción digital perfecta con una calificación de 4.8 estrellas. Perfecto para productividad y juegos. ¿Te gustaría saber más sobre sus características?";
+    } else if (input.includes('quantum') || input.includes('cuántico') || input.includes('procesador')) {
+      return "¡Nuestra Unidad de Procesamiento Cuántico es revolucionaria! Proporciona computación ultra-rápida con aceleración cuántica. Genial para desarrollo de IA y cálculos complejos. Tiene un precio de $1,299.99. ¿Te interesan las especificaciones técnicas?";
+    } else if (input.includes('display') || input.includes('pantalla') || input.includes('holográfico')) {
+      return "¡La Pantalla Holográfica es increíble! Cuenta con ángulos de visión de 360 grados y visualización 3D impresionante. Perfecta para presentaciones y entretenimiento. ¿Te gustaría ver productos similares o aprender sobre la instalación?";
+    } else if (input.includes('barato') || input.includes('económico') || input.includes('presupuesto')) {
+      return "Para opciones económicas, recomiendo el Hub de Energía Inalámbrico a $199.99 o el Escáner Biométrico Inteligente a $349.99. Ambos ofrecen gran valor y excelentes reseñas. ¿Qué tipo de producto te interesa más?";
+    } else if (input.includes('recomienda') || input.includes('sugiere') || input.includes('qué me aconsejas')) {
+      return "Basándome en nuestros productos populares, recomendaría empezar con el Asistente de Voz IA ($449.99) para integración de hogar inteligente, o el Casco de Interfaz Neural ($899.99) para tecnología de vanguardia. ¿Cuál es tu caso de uso principal?";
     } else {
-      return "I understand you're interested in our products! Our marketplace features cutting-edge technology from neural interfaces to quantum processors. Could you tell me more about what you're looking for? I can help you find the perfect match!";
+      return "¡Entiendo que estás interesado en nuestros productos! Nuestro marketplace cuenta con tecnología de vanguardia desde interfaces neurales hasta procesadores cuánticos. ¿Podrías contarme más sobre lo que buscas? ¡Puedo ayudarte a encontrar la opción perfecta!";
     }
   };
 
@@ -83,7 +170,7 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
             <div className="flex items-center justify-between">
               <CardTitle className="text-white flex items-center">
                 <Bot className="w-5 h-5 mr-2 text-cyan-400" />
-                AI Assistant
+                Asistente IA
               </CardTitle>
               <Button
                 variant="ghost"
@@ -131,9 +218,20 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask me about products..."
+                  placeholder="Escribe o habla tu mensaje..."
                   className="bg-slate-800 border-slate-600 text-white placeholder-slate-400"
                 />
+                <Button
+                  type="button"
+                  onClick={isListening ? stopListening : startListening}
+                  className={`${
+                    isListening 
+                      ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                      : 'bg-green-500 hover:bg-green-600'
+                  } transition-all duration-300`}
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </Button>
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
@@ -141,6 +239,11 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
+              {isListening && (
+                <div className="mt-2 text-center">
+                  <span className="text-sm text-cyan-400 animate-pulse">🎙️ Escuchando...</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
