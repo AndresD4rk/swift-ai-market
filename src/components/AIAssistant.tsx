@@ -30,72 +30,152 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
   useEffect(() => {
-    // Inicializar Web Speech API
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognitionConstructor();
+    console.log('Inicializando Web Speech API...');
+    
+    // Verificar soporte para reconocimiento de voz
+    const hasWebkitSpeech = 'webkitSpeechRecognition' in window;
+    const hasSpeech = 'SpeechRecognition' in window;
+    
+    console.log('Soporte webkitSpeechRecognition:', hasWebkitSpeech);
+    console.log('Soporte SpeechRecognition:', hasSpeech);
+    
+    if (hasWebkitSpeech || hasSpeech) {
+      setSpeechSupported(true);
       
-      recognitionInstance.lang = 'es-ES';
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
-      recognitionInstance.maxAlternatives = 1;
-
-      recognitionInstance.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognitionInstance.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInputMessage(transcript);
-        setIsListening(false);
+      try {
+        const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognitionInstance = new SpeechRecognitionConstructor();
         
-        // Enviar automáticamente el mensaje transcrito
-        setTimeout(() => {
-          handleSendMessage(null, transcript);
-        }, 100);
-      };
+        recognitionInstance.lang = 'es-ES';
+        recognitionInstance.continuous = false;
+        recognitionInstance.interimResults = false;
+        recognitionInstance.maxAlternatives = 1;
 
-      recognitionInstance.onerror = (event) => {
-        console.error('Error de reconocimiento de voz:', event.error);
-        setIsListening(false);
-      };
+        recognitionInstance.onstart = () => {
+          console.log('Reconocimiento de voz iniciado');
+          setIsListening(true);
+        };
 
-      recognitionInstance.onend = () => {
-        setIsListening(false);
-      };
+        recognitionInstance.onresult = (event) => {
+          console.log('Resultado de reconocimiento:', event.results);
+          const transcript = event.results[0][0].transcript;
+          console.log('Texto transcrito:', transcript);
+          setInputMessage(transcript);
+          setIsListening(false);
+          
+          // Enviar automáticamente el mensaje transcrito
+          setTimeout(() => {
+            handleSendMessage(null, transcript);
+          }, 100);
+        };
 
-      setRecognition(recognitionInstance);
+        recognitionInstance.onerror = (event) => {
+          console.error('Error de reconocimiento de voz:', event.error);
+          console.error('Mensaje de error:', event.message);
+          setIsListening(false);
+          
+          if (event.error === 'network') {
+            console.log('Error de red - reintentando en 2 segundos...');
+            setTimeout(() => {
+              if (recognition && !isListening) {
+                try {
+                  recognition.start();
+                } catch (e) {
+                  console.error('Error al reintentar:', e);
+                }
+              }
+            }, 2000);
+          }
+        };
+
+        recognitionInstance.onend = () => {
+          console.log('Reconocimiento de voz terminado');
+          setIsListening(false);
+        };
+
+        recognitionInstance.onnomatch = () => {
+          console.log('No se pudo reconocer el audio');
+          setIsListening(false);
+        };
+
+        recognitionInstance.onsoundstart = () => {
+          console.log('Sonido detectado');
+        };
+
+        recognitionInstance.onspeechstart = () => {
+          console.log('Habla detectada');
+        };
+
+        recognitionInstance.onspeechend = () => {
+          console.log('Habla terminada');
+        };
+
+        setRecognition(recognitionInstance);
+        console.log('Reconocimiento de voz configurado correctamente');
+      } catch (error) {
+        console.error('Error al configurar reconocimiento de voz:', error);
+        setSpeechSupported(false);
+      }
+    } else {
+      console.log('Web Speech API no soportada en este navegador');
+      setSpeechSupported(false);
     }
 
     // Inicializar síntesis de voz
     if ('speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
+      console.log('Síntesis de voz disponible');
+    } else {
+      console.log('Síntesis de voz no disponible');
     }
 
     return () => {
       if (recognition) {
-        recognition.stop();
+        try {
+          recognition.stop();
+        } catch (e) {
+          console.log('Error al detener reconocimiento:', e);
+        }
       }
     };
   }, []);
 
   const startListening = () => {
-    if (recognition && !isListening) {
-      recognition.start();
+    console.log('Intentando iniciar escucha...');
+    if (recognition && !isListening && speechSupported) {
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error('Error al iniciar reconocimiento:', error);
+        setIsListening(false);
+      }
+    } else {
+      console.log('No se puede iniciar la escucha:', {
+        recognition: !!recognition,
+        isListening,
+        speechSupported
+      });
     }
   };
 
   const stopListening = () => {
+    console.log('Deteniendo escucha...');
     if (recognition && isListening) {
-      recognition.stop();
+      try {
+        recognition.stop();
+      } catch (error) {
+        console.error('Error al detener reconocimiento:', error);
+      }
     }
   };
 
   const speakText = (text: string) => {
     if (synthRef.current) {
+      console.log('Hablando texto:', text);
       // Cancelar cualquier síntesis en curso
       synthRef.current.cancel();
       
@@ -105,7 +185,13 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
       utterance.pitch = 1;
       utterance.volume = 0.8;
       
+      utterance.onstart = () => console.log('Iniciando síntesis de voz');
+      utterance.onend = () => console.log('Síntesis de voz terminada');
+      utterance.onerror = (e) => console.error('Error en síntesis de voz:', e);
+      
       synthRef.current.speak(utterance);
+    } else {
+      console.log('Síntesis de voz no disponible');
     }
   };
 
@@ -114,6 +200,8 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
     
     const messageText = voiceText || inputMessage;
     if (!messageText.trim()) return;
+
+    console.log('Enviando mensaje:', messageText);
 
     const userMessage: Message = {
       id: messages.length + 1,
@@ -171,6 +259,7 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
               <CardTitle className="text-white flex items-center">
                 <Bot className="w-5 h-5 mr-2 text-cyan-400" />
                 Asistente IA
+                {speechSupported && <span className="ml-2 text-xs text-green-400">🎙️</span>}
               </CardTitle>
               <Button
                 variant="ghost"
@@ -221,17 +310,20 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
                   placeholder="Escribe o habla tu mensaje..."
                   className="bg-slate-800 border-slate-600 text-white placeholder-slate-400"
                 />
-                <Button
-                  type="button"
-                  onClick={isListening ? stopListening : startListening}
-                  className={`${
-                    isListening 
-                      ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
-                      : 'bg-green-500 hover:bg-green-600'
-                  } transition-all duration-300`}
-                >
-                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                </Button>
+                {speechSupported && (
+                  <Button
+                    type="button"
+                    onClick={isListening ? stopListening : startListening}
+                    className={`${
+                      isListening 
+                        ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                        : 'bg-green-500 hover:bg-green-600'
+                    } transition-all duration-300`}
+                    title={isListening ? 'Detener grabación' : '🎙️ Hablar'}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
+                )}
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
@@ -242,6 +334,11 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
               {isListening && (
                 <div className="mt-2 text-center">
                   <span className="text-sm text-cyan-400 animate-pulse">🎙️ Escuchando...</span>
+                </div>
+              )}
+              {!speechSupported && (
+                <div className="mt-2 text-center">
+                  <span className="text-xs text-yellow-400">Reconocimiento de voz no disponible</span>
                 </div>
               )}
             </div>
