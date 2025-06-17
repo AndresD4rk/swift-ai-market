@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, ShoppingCart, MessageCircle, Star, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ const sampleProducts = [
     price: 899.99,
     rating: 4.8,
     reviews: 324,
-    image: "https://images.unsplash.com/photo-1588058365548-ab832a2d8fdb?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop",
     category: "Electronics",
     description: "Advanced brain-computer interface for seamless digital interaction"
   },
