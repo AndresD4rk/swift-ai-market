@@ -1,76 +1,14 @@
 
 import React, { useState } from 'react';
-import { Search, ShoppingCart, MessageCircle, Star, Filter } from 'lucide-react';
+import { Search, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import ProductCard from '@/components/ProductCard';
 import AIAssistant from '@/components/AIAssistant';
 import Header from '@/components/Header';
 import CategoryFilter from '@/components/CategoryFilter';
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Neural Interface Headset",
-    price: 899.99,
-    rating: 4.8,
-    reviews: 324,
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop",
-    category: "Electronics",
-    description: "Advanced brain-computer interface for seamless digital interaction"
-  },
-  {
-    id: 2,
-    name: "Quantum Processing Unit",
-    price: 1299.99,
-    rating: 4.9,
-    reviews: 156,
-    image: "https://images.unsplash.com/photo-1518314916381-77a37c2a49ae?w=400&h=300&fit=crop",
-    category: "Computing",
-    description: "Next-generation quantum processor for ultra-fast computing"
-  },
-  {
-    id: 3,
-    name: "Holographic Display",
-    price: 2499.99,
-    rating: 4.7,
-    reviews: 89,
-    image: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop",
-    category: "Displays",
-    description: "3D holographic display with 360-degree viewing angles"
-  },
-  {
-    id: 4,
-    name: "Smart Biometric Scanner",
-    price: 349.99,
-    rating: 4.6,
-    reviews: 542,
-    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop",
-    category: "Security",
-    description: "Advanced biometric authentication system"
-  },
-  {
-    id: 5,
-    name: "Wireless Power Hub",
-    price: 199.99,
-    rating: 4.5,
-    reviews: 278,
-    image: "https://images.unsplash.com/photo-1609592827389-d45bc12a2eff?w=400&h=300&fit=crop",
-    category: "Electronics",
-    description: "Universal wireless charging station for all devices"
-  },
-  {
-    id: 6,
-    name: "AI Voice Assistant",
-    price: 449.99,
-    rating: 4.8,
-    reviews: 712,
-    image: "https://images.unsplash.com/photo-1589254065878-42c9da997008?w=400&h=300&fit=crop",
-    category: "Smart Home",
-    description: "Advanced AI assistant with natural language processing"
-  }
-];
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,9 +16,10 @@ const Index = () => {
   const [showAI, setShowAI] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
-  const categories = ['All', 'Electronics', 'Computing', 'Displays', 'Security', 'Smart Home'];
+  const { products, loading: productsLoading, error } = useProducts();
+  const { categories, loading: categoriesLoading } = useCategories();
 
-  const filteredProducts = sampleProducts.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
@@ -91,6 +30,17 @@ const Index = () => {
     setCartCount(prev => prev + 1);
     console.log(`Added product ${productId} to cart`);
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">Error loading products</h2>
+          <p className="text-slate-400">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -124,29 +74,50 @@ const Index = () => {
         </div>
 
         {/* Category Filter */}
-        <CategoryFilter
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
+        {!categoriesLoading && (
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+        )}
+
+        {/* Loading State */}
+        {productsLoading && (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+            <p className="text-slate-300">Loading products...</p>
+          </div>
+        )}
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={addToCart}
-            />
-          ))}
-        </div>
+        {!productsLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={addToCart}
+              />
+            ))}
+          </div>
+        )}
 
         {/* No Results */}
-        {filteredProducts.length === 0 && (
+        {!productsLoading && filteredProducts.length === 0 && products.length > 0 && (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-semibold text-white mb-2">No products found</h3>
             <p className="text-slate-400">Try adjusting your search or category filter</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!productsLoading && products.length === 0 && (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">📦</div>
+            <h3 className="text-2xl font-semibold text-white mb-2">No products available</h3>
+            <p className="text-slate-400">Products will appear here once they are added to the database</p>
           </div>
         )}
       </main>

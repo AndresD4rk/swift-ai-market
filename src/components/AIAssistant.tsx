@@ -22,6 +22,7 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageIdRef = useRef<number | null>(null);
 
   // Initialize speech APIs
   useEffect(() => {
@@ -91,6 +92,23 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
     }
   }, [messages]);
 
+  // Handle text-to-speech for new AI messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      
+      // Check if this is a new AI message that we haven't spoken yet
+      if (!latestMessage.isUser && 
+          latestMessage.id !== lastMessageIdRef.current && 
+          latestMessage.id !== 1) { // Don't speak the initial greeting
+        
+        console.log('Speaking new AI message:', latestMessage.text);
+        speakText(latestMessage.text);
+        lastMessageIdRef.current = latestMessage.id;
+      }
+    }
+  }, [messages]);
+
   const speakText = (text: string) => {
     if (!synthRef.current) {
       console.log('Speech synthesis not supported');
@@ -146,14 +164,6 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
 
     await sendMessage(text);
     setInputMessage('');
-
-    // Speak the AI response (only for the latest message)
-    setTimeout(() => {
-      const latestMessage = messages[messages.length - 1];
-      if (latestMessage && !latestMessage.isUser) {
-        speakText(latestMessage.text);
-      }
-    }, 500);
   };
 
   const handleClearChat = () => {
@@ -161,6 +171,7 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
     if (synthRef.current) {
       synthRef.current.cancel();
     }
+    lastMessageIdRef.current = null;
   };
 
   if (!isOpen) return null;
