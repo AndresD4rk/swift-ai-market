@@ -60,21 +60,19 @@ const ProductForm = ({ onClose, onProductAdded }: ProductFormProps) => {
       // Generate embedding using Gemini
       const embedding = await generateEmbedding(textForEmbedding);
 
-      // Insert product into database
+      // Insert product into database - removed id field since it's auto-generated
       const { data, error } = await supabase
         .from('products')
-        .insert([
-          {
-            name: formData.name,
-            description: formData.description,
-            price: parseFloat(formData.price),
-            category: formData.category,
-            image: formData.image,
-            rating: parseFloat(formData.rating),
-            reviews: parseInt(formData.reviews),
-            embedding: embedding
-          }
-        ])
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          category: formData.category,
+          image: formData.image,
+          rating: parseFloat(formData.rating),
+          reviews: parseInt(formData.reviews),
+          embedding: embedding
+        })
         .select();
 
       if (error) throw error;
