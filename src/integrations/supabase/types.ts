@@ -63,7 +63,7 @@ export type Database = {
           category?: string | null
           description?: string | null
           embedding?: string | null
-          id: number
+          id?: number
           image?: string | null
           name?: string | null
           price?: number | null
@@ -165,6 +165,24 @@ export type Database = {
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
+      }
+      search_similar_products: {
+        Args: {
+          query_embedding: string
+          match_threshold?: number
+          match_count?: number
+        }
+        Returns: {
+          id: number
+          name: string
+          description: string
+          price: number
+          category: string
+          image: string
+          rating: number
+          reviews: number
+          similarity: number
+        }[]
       }
       sparsevec_out: {
         Args: { "": unknown }
