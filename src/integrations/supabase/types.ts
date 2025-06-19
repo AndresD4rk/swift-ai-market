@@ -9,24 +9,77 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      products: {
+      admin_sessions: {
         Row: {
-          description: string | null
-          embedding: string | null
+          created_at: string
           id: string
-          name: string | null
+          product_id: number | null
+          session_end: string | null
+          session_start: string
+          status: string
+          user_identifier: string | null
         }
         Insert: {
-          description?: string | null
-          embedding?: string | null
+          created_at?: string
           id?: string
-          name?: string | null
+          product_id?: number | null
+          session_end?: string | null
+          session_start?: string
+          status?: string
+          user_identifier?: string | null
         }
         Update: {
+          created_at?: string
+          id?: string
+          product_id?: number | null
+          session_end?: string | null
+          session_start?: string
+          status?: string
+          user_identifier?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          description: string | null
+          embedding: string | null
+          id: number
+          image: string | null
+          name: string | null
+          price: number | null
+          rating: number | null
+          reviews: number | null
+        }
+        Insert: {
+          category?: string | null
           description?: string | null
           embedding?: string | null
-          id?: string
+          id: number
+          image?: string | null
           name?: string | null
+          price?: number | null
+          rating?: number | null
+          reviews?: number | null
+        }
+        Update: {
+          category?: string | null
+          description?: string | null
+          embedding?: string | null
+          id?: number
+          image?: string | null
+          name?: string | null
+          price?: number | null
+          rating?: number | null
+          reviews?: number | null
         }
         Relationships: []
       }
@@ -38,6 +91,28 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      get_active_sessions_per_product: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          product_id: number
+          product_name: string
+          active_sessions: number
+        }[]
+      }
+      get_popular_products: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          name: string
+          price: number
+          rating: number
+          reviews: number
+          image: string
+          category: string
+          description: string
+          session_count: number
+        }[]
       }
       halfvec_avg: {
         Args: { "": number[] }
