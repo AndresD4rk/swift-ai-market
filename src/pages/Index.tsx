@@ -1,34 +1,73 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ProductCard from '@/components/ProductCard';
+import ProductDetail from '@/components/ProductDetail';
 import AIAssistant from '@/components/AIAssistant';
 import Header from '@/components/Header';
 import CategoryFilter from '@/components/CategoryFilter';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useProductStore } from '@/hooks/useProductStore';
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [showAI, setShowAI] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
   const { products, loading: productsLoading, error } = useProducts();
   const { categories, loading: categoriesLoading } = useCategories();
+  
+  const {
+    selectedProductId,
+    searchFilter,
+    categoryFilter,
+    setSelectedProduct,
+    setSearchFilter,
+    setCategoryFilter,
+    clearFilters
+  } = useProductStore();
 
+  // Find selected product for detail view
+  const selectedProduct = selectedProductId 
+    ? products.find(p => p.id === selectedProductId) 
+    : null;
+
+  // Filter products based on current filters and selected product
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+    // If a specific product is selected via AI assistant, show only that product
+    if (selectedProductId) {
+      return product.id === selectedProductId;
+    }
+
+    const matchesSearch = product.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchFilter.toLowerCase());
+    const matchesCategory = categoryFilter === 'All' || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
   const addToCart = (productId: number) => {
     setCartCount(prev => prev + 1);
     console.log(`Added product ${productId} to cart`);
+  };
+
+  const handleProductSelect = (productId: number) => {
+    setSelectedProduct(productId);
+    // Clear search when selecting from AI assistant
+    setSearchFilter('');
+  };
+
+  const handleProductCardClick = (productId: number) => {
+    setSelectedProduct(productId);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedProduct(null);
+  };
+
+  const handleBackToCatalog = () => {
+    clearFilters();
   };
 
   if (error) {
@@ -65,20 +104,30 @@ const Index = () => {
               <Input
                 type="text"
                 placeholder="Search for futuristic products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
                 className="pl-12 pr-4 py-3 w-full bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-slate-400 rounded-2xl focus:bg-white/20 transition-all duration-300"
               />
             </div>
           </div>
+
+          {/* Back to catalog button when product is selected */}
+          {selectedProductId && (
+            <Button
+              onClick={handleBackToCatalog}
+              className="mb-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+            >
+              Ver todo el catálogo
+            </Button>
+          )}
         </div>
 
         {/* Category Filter */}
-        {!categoriesLoading && (
+        {!categoriesLoading && !selectedProductId && (
           <CategoryFilter
             categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            selectedCategory={categoryFilter}
+            onCategoryChange={setCategoryFilter}
           />
         )}
 
@@ -94,11 +143,12 @@ const Index = () => {
         {!productsLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-              />
+              <div key={product.id} onClick={() => handleProductCardClick(product.id)}>
+                <ProductCard
+                  product={product}
+                  onAddToCart={addToCart}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -109,6 +159,14 @@ const Index = () => {
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-semibold text-white mb-2">No products found</h3>
             <p className="text-slate-400">Try adjusting your search or category filter</p>
+            {selectedProductId && (
+              <Button
+                onClick={handleBackToCatalog}
+                className="mt-4 bg-gradient-to-r from-cyan-500 to-blue-600"
+              >
+                Ver todos los productos
+              </Button>
+            )}
           </div>
         )}
 
@@ -122,8 +180,21 @@ const Index = () => {
         )}
       </main>
 
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <ProductDetail
+          product={selectedProduct}
+          onClose={handleCloseDetail}
+          onAddToCart={addToCart}
+        />
+      )}
+
       {/* AI Assistant */}
-      <AIAssistant isOpen={showAI} onToggle={() => setShowAI(!showAI)} />
+      <AIAssistant 
+        isOpen={showAI} 
+        onToggle={() => setShowAI(!showAI)}
+        onProductSelect={handleProductSelect}
+      />
 
       {/* Floating AI Button */}
       <Button

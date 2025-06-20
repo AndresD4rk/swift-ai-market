@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, X, Bot, User, Mic, MicOff, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,9 +10,10 @@ import ProductSuggestions from './ProductSuggestions';
 interface AIAssistantProps {
   isOpen: boolean;
   onToggle: () => void;
+  onProductSelect?: (productId: number) => void;
 }
 
-const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
+const AIAssistant = ({ isOpen, onToggle, onProductSelect }: AIAssistantProps) => {
   const { messages, isLoading, sendMessage, clearMessages } = useGeminiChat();
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -174,6 +174,13 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
     lastMessageIdRef.current = null;
   };
 
+  const handleProductSelect = (productId: number) => {
+    if (onProductSelect) {
+      onProductSelect(productId);
+      onToggle(); // Close the assistant after selecting a product
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -219,7 +226,10 @@ const AIAssistant = ({ isOpen, onToggle }: AIAssistantProps) => {
                       <div className="text-sm">{msg.text}</div>
                     </div>
                     {!msg.isUser && msg.contextProducts && msg.contextProducts.length > 0 && (
-                      <ProductSuggestions products={msg.contextProducts} />
+                      <ProductSuggestions 
+                        products={msg.contextProducts} 
+                        onProductSelect={handleProductSelect}
+                      />
                     )}
                   </div>
                 </div>

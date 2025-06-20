@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminSessions } from './useAdminSessions';
 
 interface Message {
   id: number;
@@ -25,6 +26,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     timestamp: new Date()
   }]);
   const [isLoading, setIsLoading] = useState(false);
+  const { createSession } = useAdminSessions();
 
   const sendMessage = useCallback(async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
@@ -60,13 +62,27 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
         throw error;
       }
 
+      // Create sessions for products that meet similarity threshold
+      if (data.contextProducts && data.contextProducts.length > 0) {
+        const relevantProducts = data.contextProducts.filter((product: any) => 
+          product.similarity >= 0.7
+        );
+        
+        // Create sessions for relevant products
+        for (const product of relevantProducts) {
+          await createSession(product.id);
+        }
+      }
+
       // Add AI response
       const aiMessage: Message = {
         id: Date.now() + 1,
         text: data.response || 'Lo siento, no pude procesar tu mensaje.',
         isUser: false,
         timestamp: new Date(),
-        contextProducts: data.contextProducts || []
+        contextProducts: data.contextProducts?.filter((product: any) => 
+          product.similarity >= 0.7
+        ) || []
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -86,7 +102,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, createSession]);
 
   const clearMessages = useCallback(() => {
     setMessages([{
