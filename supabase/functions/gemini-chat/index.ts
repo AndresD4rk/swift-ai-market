@@ -38,13 +38,18 @@ serve(async (req) => {
     });
 
     let contextProducts = [];
+    let highSimilarityProducts = [];
+    
     if (searchResponse.data && searchResponse.data.products) {
       contextProducts = searchResponse.data.products;
+      // Filter products with high similarity (>= 0.7) for suggestions
+      highSimilarityProducts = contextProducts.filter((product: any) => product.similarity >= 0.7);
     }
 
     console.log('Found context products:', contextProducts.length);
+    console.log('High similarity products (>=0.7):', highSimilarityProducts.length);
 
-    // Build context from similar products
+    // Build context from similar products (use all for context, but only show high similarity ones)
     let productContext = '';
     if (contextProducts.length > 0) {
       productContext = '\n\nProductos relevantes disponibles:\n';
@@ -123,10 +128,11 @@ Si no encuentras productos relevantes para la consulta del usuario, aún puedes 
     const aiResponse = data.candidates[0].content.parts[0].text;
     console.log('Generated AI response');
 
+    // Only return high similarity products for suggestions
     return new Response(JSON.stringify({ 
       response: aiResponse,
-      contextProducts: contextProducts,
-      productCount: contextProducts.length
+      contextProducts: highSimilarityProducts, // Only products with similarity >= 0.7
+      productCount: highSimilarityProducts.length
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

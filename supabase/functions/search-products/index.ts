@@ -39,12 +39,12 @@ serve(async (req) => {
 
     const queryEmbedding = embeddingResponse.data.embedding;
 
-    // Search for similar products using the RPC function
+    // Search for similar products using the RPC function with a lower threshold for initial search
     const { data: similarProducts, error: searchError } = await supabase
       .rpc('search_similar_products', {
         query_embedding: queryEmbedding,
-        match_threshold: 0.5,
-        match_count: 5
+        match_threshold: 0.3, // Lower threshold to get more candidates
+        match_count: 10
       });
 
     if (searchError) {
@@ -54,6 +54,7 @@ serve(async (req) => {
 
     console.log('Found similar products:', similarProducts?.length || 0);
 
+    // Return all products found, let the frontend handle the filtering
     return new Response(JSON.stringify({ 
       products: similarProducts || [],
       query: query 
