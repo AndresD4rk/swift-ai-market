@@ -14,7 +14,7 @@ interface ProductStore {
 export const useProductStore = (): ProductStore => {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [categoryFilter, setCategoryFilter] = useState('Todas');
 
   const setSelectedProduct = useCallback((id: number | null) => {
     setSelectedProductId(id);
@@ -22,7 +22,7 @@ export const useProductStore = (): ProductStore => {
 
   const clearFilters = useCallback(() => {
     setSearchFilter('');
-    setCategoryFilter('All');
+    setCategoryFilter('Todas');
     setSelectedProductId(null);
   }, []);
 
