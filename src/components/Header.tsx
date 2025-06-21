@@ -27,16 +27,16 @@ const Header = ({ cartCount }: HeaderProps) => {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
-              Products
+              Productos
             </a>
             <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
-              Categories
+              Categorías
             </a>
             <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
-              Deals
+              Ofertas
             </a>
             <a href="#" className="text-slate-300 hover:text-white transition-colors duration-200">
-              Support
+              Soporte
             </a>
           </nav>
 
@@ -47,7 +47,7 @@ const Header = ({ cartCount }: HeaderProps) => {
               size="sm" 
               className="text-slate-300 hover:text-white hover:bg-white/10"
               onClick={() => navigate('/admin')}
-              title="Admin Dashboard"
+              title="Panel de Administración"
             >
               <Settings className="w-5 h-5" />
             </Button>
@@ -67,7 +67,7 @@ const Header = ({ cartCount }: HeaderProps) => {
             
             <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
               <User className="w-4 h-4 mr-2" />
-              Sign In
+              Iniciar Sesión
             </Button>
           </div>
         </div>

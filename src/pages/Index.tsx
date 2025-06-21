@@ -43,7 +43,7 @@ const Index = () => {
 
     const matchesSearch = product.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchFilter.toLowerCase());
-    const matchesCategory = categoryFilter === 'All' || product.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'Todas' || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
@@ -74,7 +74,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Error loading products</h2>
+          <h2 className="text-2xl font-bold mb-4">Error al cargar productos</h2>
           <p className="text-slate-400">{error}</p>
         </div>
       </div>
@@ -93,9 +93,9 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
-            Future Marketplace
+            Mercado del Futuro
           </h1>
-          <p className="text-xl text-slate-300 mb-8">Discover tomorrow's technology today</p>
+          <p className="text-xl text-slate-300 mb-8">Descubre la tecnología del mañana hoy</p>
           
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto relative mb-8">
@@ -103,7 +103,7 @@ const Index = () => {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search for futuristic products..."
+                placeholder="Buscar productos futuristas..."
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 className="pl-12 pr-4 py-3 w-full bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-slate-400 rounded-2xl focus:bg-white/20 transition-all duration-300"
@@ -135,7 +135,7 @@ const Index = () => {
         {productsLoading && (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-            <p className="text-slate-300">Loading products...</p>
+            <p className="text-slate-300">Cargando productos...</p>
           </div>
         )}
 
@@ -157,8 +157,8 @@ const Index = () => {
         {!productsLoading && filteredProducts.length === 0 && products.length > 0 && (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-semibold text-white mb-2">No products found</h3>
-            <p className="text-slate-400">Try adjusting your search or category filter</p>
+            <h3 className="text-2xl font-semibold text-white mb-2">No se encontraron productos</h3>
+            <p className="text-slate-400">Intenta ajustar tu búsqueda o filtro de categoría</p>
             {selectedProductId && (
               <Button
                 onClick={handleBackToCatalog}
@@ -174,8 +174,8 @@ const Index = () => {
         {!productsLoading && products.length === 0 && (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-2xl font-semibold text-white mb-2">No products available</h3>
-            <p className="text-slate-400">Products will appear here once they are added to the database</p>
+            <h3 className="text-2xl font-semibold text-white mb-2">No hay productos disponibles</h3>
+            <p className="text-slate-400">Los productos aparecerán aquí una vez que se agreguen a la base de datos</p>
           </div>
         )}
       </main>

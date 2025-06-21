@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, Package, Activity, Plus } from 'lucide-react';
+import { TrendingUp, Users, Package, Activity, Plus, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import PopularProductsTable from '@/components/admin/PopularProductsTable';
 import ActiveSessionsChart from '@/components/admin/ActiveSessionsChart';
 import ProductForm from '@/components/admin/ProductForm';
@@ -33,6 +33,7 @@ interface ActiveSession {
 
 const AdminDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch popular products
   const { data: popularProducts, isLoading: loadingProducts, refetch: refetchProducts } = useQuery({
@@ -72,7 +73,16 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
+              <div className="flex items-center mb-2">
+                <Button
+                  onClick={() => navigate('/')}
+                  variant="ghost"
+                  className="text-slate-400 hover:text-white mr-4 p-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <h1 className="text-4xl font-bold text-white">Panel de Administración</h1>
+              </div>
               <p className="text-slate-400">Gestiona productos y monitorea métricas en tiempo real</p>
             </div>
             <Button
@@ -115,7 +125,7 @@ const AdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Rating Promedio</p>
+                  <p className="text-slate-400 text-sm">Calificación Promedio</p>
                   <p className="text-2xl font-bold text-white">{avgRating.toFixed(1)}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-yellow-400" />
@@ -136,7 +146,7 @@ const AdminDashboard = () => {
               Sesiones Activas
             </TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-cyan-600">
-              Analytics
+              Analíticas
             </TabsTrigger>
           </TabsList>
 
@@ -194,7 +204,7 @@ const AdminDashboard = () => {
               {/* Rating Distribution */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
-                  <CardTitle className="text-white">Distribución de Ratings</CardTitle>
+                  <CardTitle className="text-white">Distribución de Calificaciones</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
