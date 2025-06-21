@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAdminSessions } from './useAdminSessions';
+import { useSessionManager } from './useSessionManager';
 
 interface Message {
   id: number;
@@ -26,12 +26,13 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     timestamp: new Date()
   }]);
   const [isLoading, setIsLoading] = useState(false);
-  const { createSession } = useAdminSessions();
+  const { startSession, updateActivity } = useSessionManager();
 
   const sendMessage = useCallback(async (messageText: string) => {
     if (!messageText.trim() || isLoading) return;
 
     setIsLoading(true);
+    updateActivity(); // Registrar actividad del usuario
 
     // Add user message
     const userMessage: Message = {
@@ -70,7 +71,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
         
         // Create sessions for relevant products
         for (const product of relevantProducts) {
-          await createSession(product.id);
+          await startSession(product.id);
         }
       }
 
@@ -102,7 +103,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, createSession]);
+  }, [messages, isLoading, startSession, updateActivity]);
 
   const clearMessages = useCallback(() => {
     setMessages([{

@@ -12,6 +12,7 @@ import PopularProductsTable from '@/components/admin/PopularProductsTable';
 import ActiveSessionsChart from '@/components/admin/ActiveSessionsChart';
 import ProductForm from '@/components/admin/ProductForm';
 import RealtimeMetrics from '@/components/admin/RealtimeMetrics';
+import { useInactiveSessionCleaner } from '@/hooks/useInactiveSessionCleaner';
 
 interface PopularProduct {
   id: number;
@@ -34,6 +35,9 @@ interface ActiveSession {
 const AdminDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const navigate = useNavigate();
+
+  // Usar el limpiador de sesiones inactivas
+  useInactiveSessionCleaner();
 
   // Fetch popular products
   const { data: popularProducts, isLoading: loadingProducts, refetch: refetchProducts } = useQuery({
@@ -85,13 +89,22 @@ const AdminDashboard = () => {
               </div>
               <p className="text-slate-400">Gestiona productos y monitorea métricas en tiempo real</p>
             </div>
-            <Button
-              onClick={() => setShowProductForm(true)}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Agregar Producto
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-white"
+              >
+                Volver al Inicio
+              </Button>
+              <Button
+                onClick={() => setShowProductForm(true)}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Producto
+              </Button>
+            </div>
           </div>
         </div>
 
