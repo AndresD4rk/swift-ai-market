@@ -1,73 +1,229 @@
-# Welcome to your Lovable project
 
-## Project info
+# Security Review & Project Architecture
 
-**URL**: https://lovable.dev/projects/d83a97cb-173d-49a9-a39a-9efc47ed9644
+## Project Overview
 
-## How can I edit this code?
+This is a modern e-commerce application built with React, TypeScript, and Supabase, featuring AI-powered product recommendations using Google's Gemini API. The application includes an AI shopping assistant, real-time admin dashboard, and comprehensive session management.
 
-There are several ways of editing your application.
+## Architecture Overview
 
-**Use Lovable**
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: Custom hooks with local state
+- **Routing**: React Router DOM
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d83a97cb-173d-49a9-a39a-9efc47ed9644) and start prompting.
+### Backend Architecture
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Currently no authentication system
+- **API**: Supabase Edge Functions (Deno runtime)
+- **AI Integration**: Google Gemini API for chat functionality
+- **Vector Search**: PostgreSQL with pgvector extension
 
-Changes made via Lovable will be committed automatically to this repo.
+### Key Components
 
-**Use your preferred IDE**
+#### 1. Product Management
+- **Products Table**: Stores product information with vector embeddings
+- **Vector Search**: Uses cosine similarity for product recommendations
+- **Categories**: Dynamic category filtering from product data
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+#### 2. AI Assistant
+- **Chat Interface**: Real-time conversation with Gemini AI
+- **Product Integration**: AI can recommend and display relevant products
+- **Context Awareness**: Maintains conversation history and product context
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+#### 3. Session Management
+- **Active Sessions**: Tracks user interactions with products
+- **Inactivity Detection**: Automatically ends sessions after 5 minutes of inactivity
+- **Cleanup System**: Background process to clean up stale sessions
 
-Follow these steps:
+#### 4. Admin Dashboard
+- **Real-time Metrics**: Live view of active sessions and popular products
+- **Product Management**: CRUD operations for products
+- **Session Analytics**: Visualizes user engagement patterns
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Problem-Solving Approach
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 1. AI Integration Challenges
 
-# Step 3: Install the necessary dependencies.
-npm i
+**Problem**: Integrating AI recommendations with product catalog
+**Solution**: 
+- Created vector embeddings for products using Gemini API
+- Implemented similarity search with configurable thresholds (0.7 default)
+- Built context-aware chat that can suggest relevant products
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+**Implementation**:
+```typescript
+// Vector search with similarity threshold
+const relevantProducts = data.contextProducts.filter((product: any) => 
+  product.similarity >= 0.7
+);
+```
+
+### 2. Session Management
+
+**Problem**: Tracking user engagement without authentication
+**Solution**:
+- Created anonymous session system with unique identifiers
+- Implemented inactivity detection using multiple event listeners
+- Added cleanup mechanisms for stale sessions
+
+**Key Features**:
+- 5-minute inactivity timeout
+- Automatic session cleanup every 2 minutes
+- Browser close detection with sendBeacon API
+
+### 3. Real-time Admin Dashboard
+
+**Problem**: Providing real-time insights for administrators
+**Solution**:
+- Built custom hooks for data fetching with React Query
+- Created reusable chart components with Recharts
+- Implemented automatic data refresh for live metrics
+
+### 4. Product Discovery
+
+**Problem**: Helping users find relevant products efficiently
+**Solution**:
+- Multi-layered search: text search, category filtering, AI recommendations
+- Smart product suggestions based on user queries
+- Visual product cards with detailed information
+
+## Security Analysis
+
+### Current Security Posture
+
+#### ✅ Strengths
+1. **API Security**: Edge functions handle external API calls securely
+2. **Input Validation**: Basic input sanitization in forms
+3. **CORS Configuration**: Proper CORS headers in Edge functions
+4. **Environment Variables**: Sensitive data stored in Supabase secrets
+
+#### ⚠️ Areas of Concern
+
+1. **No Authentication System**
+   - Admin dashboard is publicly accessible
+   - No user management or authorization
+   - Sessions use anonymous identifiers
+
+2. **Database Security**
+   - No Row Level Security (RLS) policies implemented
+   - All tables are publicly accessible
+   - No data access controls
+
+3. **Rate Limiting**
+   - No rate limiting on API endpoints
+   - Potential for abuse of AI chat functionality
+   - No protection against spam or DoS attacks
+
+4. **Data Validation**
+   - Limited input validation on forms
+   - No comprehensive data sanitization
+   - Potential XSS vulnerabilities
+
+### Recommended Security Improvements
+
+#### Immediate Actions (High Priority)
+
+1. **Implement Authentication**
+   ```sql
+   -- Enable RLS on all tables
+   ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE admin_sessions ENABLE ROW LEVEL SECURITY;
+   
+   -- Create admin role policy
+   CREATE POLICY "Admin access" ON products
+   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+   ```
+
+2. **Add Rate Limiting**
+   ```typescript
+   // In Edge Functions
+   const rateLimiter = new Map();
+   const RATE_LIMIT = 10; // requests per minute
+   ```
+
+3. **Input Validation**
+   ```typescript
+   import { z } from 'zod';
+   
+   const productSchema = z.object({
+     name: z.string().min(1).max(255),
+     price: z.number().positive(),
+     description: z.string().max(1000)
+   });
+   ```
+
+#### Medium Priority
+
+1. **HTTPS Enforcement**: Ensure all communications use HTTPS
+2. **Content Security Policy**: Implement CSP headers
+3. **SQL Injection Prevention**: Use parameterized queries
+4. **XSS Protection**: Implement content sanitization
+
+#### Long-term Improvements
+
+1. **Audit Logging**: Track all admin actions
+2. **Data Encryption**: Encrypt sensitive data at rest
+3. **Backup Strategy**: Implement automated backups
+4. **Monitoring**: Add security monitoring and alerting
+
+## Technical Debt & Refactoring Opportunities
+
+### File Size Concerns
+- `src/pages/Index.tsx` (211 lines) - Should be broken into smaller components
+- Consider extracting search, filter, and product grid logic
+
+### Code Organization
+- Move business logic from components to custom hooks
+- Create shared utilities for common operations
+- Implement proper error boundaries
+
+### Performance Optimizations
+- Implement virtual scrolling for large product lists
+- Add image lazy loading
+- Optimize bundle size with code splitting
+
+## Development Workflow
+
+### Getting Started
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Setup
+1. Configure Supabase project
+2. Set up Gemini API key
+3. Run database migrations
+4. Generate vector embeddings for products
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Testing Strategy
+- Unit tests for utility functions
+- Integration tests for API endpoints
+- E2E tests for critical user flows
 
-**Use GitHub Codespaces**
+## Monitoring & Maintenance
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Performance Metrics
+- Page load times
+- API response times
+- Database query performance
+- AI response latency
 
-## What technologies are used for this project?
+### Business Metrics
+- User engagement with AI assistant
+- Product recommendation accuracy
+- Session duration and conversion rates
 
-This project is built with:
+### Operational Concerns
+- Database storage growth (vector embeddings)
+- API usage costs (Gemini API)
+- Session cleanup efficiency
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Conclusion
 
-## How can I deploy this project?
+This project demonstrates a solid foundation for a modern e-commerce platform with AI capabilities. The architecture is well-structured and follows React best practices. However, significant security improvements are needed before production deployment, particularly around authentication, authorization, and data protection.
 
-Simply open [Lovable](https://lovable.dev/projects/d83a97cb-173d-49a9-a39a-9efc47ed9644) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The session management system and AI integration are innovative features that provide real value to both users and administrators. With proper security measures in place, this application has the potential to be a robust, scalable e-commerce solution.
