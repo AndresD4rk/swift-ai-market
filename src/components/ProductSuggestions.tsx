@@ -24,7 +24,7 @@ interface ProductSuggestionsProps {
 
 const ProductSuggestions = ({ products, onProductSelect }: ProductSuggestionsProps) => {
   // Filter products with similarity >= 0.7
-  const relevantProducts = products.filter(product => product.similarity >= 0.7);
+  const relevantProducts = products;
 
   // Don't render anything if there are no relevant products
   if (!relevantProducts || relevantProducts.length === 0) {
