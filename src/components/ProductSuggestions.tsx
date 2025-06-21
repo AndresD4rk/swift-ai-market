@@ -40,7 +40,7 @@ const ProductSuggestions = ({ products, onProductSelect }: ProductSuggestionsPro
   return (
     <div className="mt-4">
       <div className="text-sm font-medium text-cyan-400 mb-2">
-        Productos recomendados (similitud ≥ 70%):
+        Productos encontrados:
       </div>
       <div className="space-y-3 max-h-80 overflow-y-auto">
         {relevantProducts.slice(0, 3).map((product) => (

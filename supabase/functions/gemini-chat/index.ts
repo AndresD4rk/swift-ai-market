@@ -47,7 +47,7 @@ serve(async (req) => {
     }
 
     console.log('Found context products:', contextProducts.length);
-    console.log('High similarity products (>=0.7):', highSimilarityProducts.length);
+    console.log('High similarity products:', highSimilarityProducts.length);
 
     // Build context from similar products (use all for context, but only show high similarity ones)
     let productContext = '';
@@ -78,11 +78,12 @@ serve(async (req) => {
 4. Comparar productos cuando sea relevante
 5. Responder preguntas sobre características, precios y disponibilidad
 
-Siempre responde en español de manera amigable y profesional. Cuando tengas información sobre productos relevantes, úsala para dar respuestas más precisas y útiles.
+Siempre responde en español de manera amigable, precisa y profesional. Cuando tengas información sobre productos relevantes, úsala para dar respuestas más precisas y útiles.
+Usa lenguaje natural y no te extiendas mucho con las respuestas.
 
 ${productContext}
 
-Si no encuentras productos relevantes para la consulta del usuario, aún puedes ayudar respondiendo preguntas generales sobre compras o pidiendo más detalles para hacer una mejor búsqueda.`;
+Si no encuentras productos relevantes para la consulta del usuario, responde que de manera amable que solo puedes ayudar con los productos que hayan en la tienda`;
 
     // Add current message to conversation
     conversationHistory.push({
