@@ -81,9 +81,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
         text: data.response || 'Lo siento, no pude procesar tu mensaje.',
         isUser: false,
         timestamp: new Date(),
-        contextProducts: data.contextProducts?.filter((product: any) => 
-          product.similarity >= 0.7
-        ) || []
+        contextProducts: data.contextProducts || []
       };
 
       setMessages(prev => [...prev, aiMessage]);
