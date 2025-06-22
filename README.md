@@ -1,6 +1,13 @@
 
 # Security Review & Project Architecture
 
+## 🚀 Deployed Application
+
+The project is deployed and accessible online. You can try the live version at the link below:
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://swift-ai-market.lovable.app/)
+
+
 ## Project Overview
 
 This is a modern e-commerce application built with React, TypeScript, and Supabase, featuring AI-powered product recommendations using Google's Gemini API. The application includes an AI shopping assistant, real-time admin dashboard, and comprehensive session management.
